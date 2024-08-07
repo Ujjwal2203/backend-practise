@@ -1,13 +1,13 @@
 // we can either use promise or try catch 
 
 // using promises
-
-const asyncHandler = (func) => { 
-  (req,res,next)=>{
-    Promise.resolve(func(req,res,next)).reject((error) => next(error))
+// function within function  or we can say asynchandler function function is a higher order function 
+const asyncHandler = (requesthandler) => { 
+  return (req,res,next)=>{
+    Promise.resolve(requesthandler(req,res,next)).reject((error) => next(error))
   }
 }
-
+  
 export {asyncHandler}
 
 // we are using middlesware so we are also passing next as a parameter with request and response 

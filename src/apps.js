@@ -22,4 +22,15 @@ app.use(express.static("public"))
 
 app.use(cookieParser())
 
+// routes 
+
+import userRouter from "./routes/user.routes.js"
+
+// routes declaration 
+// here we can't use app.get because there we are segregating everything and we need "use" method 
+
+app.use("/api/v1/user", userRouter)
+
+// http://localhost:8000/api/v1/user/register
+
 export {app}
