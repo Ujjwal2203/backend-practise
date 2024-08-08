@@ -11,7 +11,7 @@ class Apiresponse{
   }
 }
 
-
+export {Apiresponse}
 // about status code 
 /*
 1) information response (100 - 199)

@@ -4,7 +4,7 @@
 // function within function  or we can say asynchandler function function is a higher order function 
 const asyncHandler = (requesthandler) => { 
   return (req,res,next)=>{
-    Promise.resolve(requesthandler(req,res,next)).reject((error) => next(error))
+    Promise.resolve(requesthandler(req,res,next)).catch((error) => next(error))
   }
 }
   
