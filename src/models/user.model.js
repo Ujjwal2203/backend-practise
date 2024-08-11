@@ -67,6 +67,7 @@ userSchema.methods.ispasswordcorrect = async function(password){
     return await bcrypt.compare(password, this.password) // bcrypt can also compare and return true or false
  } 
 
+// main difference between access token and refresh token is that access token is short lived for example access token expiry is 15 mins then we allow user a session of 15 min after that user need to reenter the password and needs to relogin whereas refresh token is long lived  which we use to generate new access token for user to extend session expiry.
 userSchema.methods.generateaccesstoken = function(){
   return jwt.sign(
     {
