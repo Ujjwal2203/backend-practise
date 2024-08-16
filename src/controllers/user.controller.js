@@ -3,6 +3,7 @@ import {Apierror} from "../utils/apierror.js"
 import { User} from "../models/user.model.js"
 import {uploadoncloudinary} from "../utils/cloudinary.js"
 import {Apiresponse} from "../utils/apiresponse.js"
+import jwt from "jsonwebtoken";
 
 // creating a model for refresh  and access tokens 
 
@@ -196,4 +197,51 @@ const logoutUser = asyncHandler(async(req,res)=>{
 
 })
 
-export {registerduser , loginUser , logoutUser }
+const refreshAccessToken = asyncHandler(async(req,res)=>{
+  // we are making this to refresh the access token after its expiry so user don't have to relogin 
+  // we can do this by checking refresh token from cookies with the saved refresh token from database and if match we can generate a new access token
+
+  const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken
+  if (!incomingRefreshToken) {
+    throw new Apierror(401 , "unauthorized request ")
+  }
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken ,
+      process.env.REFRESH_TOKEN_SECRET
+    )
+    const user = await User.findById(decodedToken?._id)
+  
+    if (!user) {
+      throw new Apierror(408, "Invalid refresh Token")
+    }
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new Apierror(408, "refresh Token expired")
+    }
+  
+    // after all the checks generate user a new token 
+  
+    const {accessToken  , newRefreshToken} = await generateRefreshAndAccessTokens(user._id)
+  
+    // we will send response in cookie so options is needed we can also declare them globally
+    const options = {
+      httponly: true,
+      secure: true
+    }
+    return res
+    .status(200)
+    .cookie("refreshToken" , newRefreshToken , options)
+    .cookie("accessToken" , accessToken , options)
+    .json(
+      new Apiresponse(
+        200,
+        {accessToken , refreshToken: newRefreshToken},
+        "access token refreshed successfully"
+      )
+    )
+  } catch (error) {
+    throw new Apierror(401 , "access token generation failed")
+  }
+})
+
+export {registerduser , loginUser , logoutUser ,refreshAccessToken }

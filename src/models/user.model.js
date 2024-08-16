@@ -70,6 +70,7 @@ userSchema.methods.ispasswordcorrect = async function(password){
 // main difference between access token and refresh token is that access token is short lived for example access token expiry is 15 mins then we allow user a session of 15 min after that user need to reenter the password and needs to relogin whereas refresh token is long lived  which we use to generate new access token for user to extend session expiry.
 userSchema.methods.generateaccesstoken = function(){
   return jwt.sign(
+    //  Paylaod
     {
       _id : this._id,
       email: this.email,
@@ -89,7 +90,7 @@ userSchema.methods.generaterefreshtoken = function(){
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn : process.env.REFRESH_TOKEN_EXPIRY
+      expiresIn : process.env.REFRESH_TOKEN_EXPIRY,
     }
   )
 }
