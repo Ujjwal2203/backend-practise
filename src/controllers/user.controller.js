@@ -339,5 +339,75 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
   .json(new Apiresponse(200 , user , "User coverImage updated successfully"))
 })
 
+const getUserChannelProfile = asyncHandler(async(req,res)=>{
+  const {username} = req.params
+  if(!username?.trim()){
+    throw new Apierror(400, "username is missing")
+  }
+  const channel = await User.aggregate([
+    {
+      $match:{
+        username : username?.toLowerCase()  // match is basically used at the starting to seprate required data from whole datasets
+      }
+    },
+      {
+        $lookup:{
+            from: "subcriptions",
+            localField: "_id",
+            foreignField:"channel",
+            as:"subscribers"
+        }
+      },
+      {
+        $lookup:{   // lookup is basically used for searching and joining datasets 
+          from:"subscriptions",
+          localField:"_id",
+          foreignField:"subscriber",
+          as: "subscribedTo"
+        }
+      },
+      {
+        $addFields:{    // addfields is used to add additional fields to the data 
+          subscribersCount: {   // this will calculate the number of subscribers a channel has
+            $size: "$subscribers"
+          },
+          channelSubscribedTo:{  // this will calculate channel subscribed by our channel 
+            $size: "$subscribedTo"
+          },
+          isSubscribed:{
+            $cond:{   // cond stands for condition and it consists of if, then , else
+              if: {
+                $in: [req.user?._id , "$subscribers.subscriber"]  // in is used to check if data exists or not and can be used in arrays , object 
+              },
+              then: true,  // through this we are returning true and false to frontend and if true it will show that u are subscribed to the channel and if false then it will show subscribe button instead of subscribed as shown on youtube website 
+              else: false,
+            }
+          }
+        }
+      },
+      {
+        $project:{   // project means projection i.e which fields we want to show we turn there flag to 1 and display them
+          fullname: 1,
+          username: 1,
+          subscribersCount:1,
+          channelSubscribedTo:1,
+          isSubscribed:1,
+          avatar:1,
+          email:1
+        }
+      }
+    
+  ])
 
-export {registerduser , loginUser , logoutUser ,refreshAccessToken ,changeCurrentPassword  , getCurrentUser ,updateAccountDetails , updateUserAvatar ,updateUserCoverImage}
+  if(!channel?.length){
+    throw new Apierror(400, "channel does not exist")
+  }
+
+  return res
+  .status(200)
+  .json(
+    new Apiresponse(200,channel[0], "User channel fetched successfully")
+  )
+})
+
+export {registerduser , loginUser , logoutUser ,refreshAccessToken ,changeCurrentPassword  , getCurrentUser ,updateAccountDetails , updateUserAvatar ,updateUserCoverImage ,getUserChannelProfile}
